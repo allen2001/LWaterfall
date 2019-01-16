@@ -13,35 +13,58 @@
 		this.columnHeights = [];	// 记录容器每一列的高度
 		this.minIndex = 0;	// 当前高度最小列的序号
 		this.minColumnHeight = 0;	// 当前高度最小列的高度
+		this.hasLoadedIndex = 0;	// 已加载的图片数
 
 		// 初始化
 		this._init();
 	}
 	// 初始化
 	LWaterfall.prototype._init = function() {
+		var _this = this;
 		this.dom.style.position = 'relative';
 
 		// 给每一张图片设置位置
+		var oImg = '';
 		for (var i = 0; i < this.itemList.length; i++) {
 			this.itemList[i].style.position = 'absolute';
-			// 给第一行图片设置位置
-			if (i < this.columnNums) {
-				this.itemList[i].style.top = 0;
-				this.itemList[i].style.left = (this.itemWidth * i) + 'px';
-				this.columnHeights[i] = this.itemList[i].offsetHeight;
+			oImg = this.itemList[i].getElementsByTagName('img')[0];
+			// 判断图片是否加载完成
+			if (!oImg.complete) {
+				oImg.curIndex = i;
+				// 处理未加载完成的图片
+				oImg.onload = function() {
+					_this._setPos(this.curIndex);
+					// 所有图片加载完成后给父容器设置高度
+					if (_this.hasLoadedIndex == _this.itemList.length) {
+						_this.dom.style.height = calcContainerHeight(_this.columnHeights) + 'px';
+					}
+				}
 				continue;
 			}
-			// 找出高度最小的那一列
-			this.minIndex = calcColumnMinHeight(this.columnHeights);
-			this.minColumnHeight = this.columnHeights[this.minIndex];
-			this.itemList[i].style.top = this.minColumnHeight + 'px';
-			this.itemList[i].style.left = (this.itemWidth * this.minIndex) + 'px';
-			this.columnHeights[this.minIndex] += this.itemList[i].offsetHeight;	// 累加列的高度
+
+			this._setPos(i);
 		}
 
 		// 给父容器设置高度
-		var containerH = calcContainerHeight(this.columnHeights);
-		this.dom.style.height = containerH + 'px';
+		this.dom.style.height = calcContainerHeight(this.columnHeights) + 'px';
+	}
+	// 设置图片位置
+	LWaterfall.prototype._setPos = function(index) {
+		// 给第一行图片设置位置
+		if (this.hasLoadedIndex < this.columnNums) {
+			this.itemList[index].style.top = 0;
+			this.itemList[index].style.left = (this.itemWidth * this.hasLoadedIndex) + 'px';
+			this.columnHeights[this.hasLoadedIndex] = this.itemList[index].offsetHeight;
+			this.hasLoadedIndex++;
+			return;
+		}
+		// 找出高度最小的那一列
+		this.minIndex = calcColumnMinHeight(this.columnHeights);
+		this.minColumnHeight = this.columnHeights[this.minIndex];
+		this.itemList[index].style.top = this.minColumnHeight + 'px';
+		this.itemList[index].style.left = (this.itemWidth * this.minIndex) + 'px';
+		this.columnHeights[this.minIndex] += this.itemList[index].offsetHeight;	// 累加列的高度
+		this.hasLoadedIndex++;
 	}
 
 	/* 工具函数 */
