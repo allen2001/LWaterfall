@@ -37,7 +37,7 @@ HTML和CSS代码如下:
 ```
 
 js代码如下:
-```js
+```html
 <script type="text/javascript" src="js/LWaterfall.js"></script>
 <script type="text/javascript">
   var waterfall = new LWaterfall(document.querySelector('.container'));
